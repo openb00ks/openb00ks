@@ -10,7 +10,6 @@ import (
 
 	"github.com/openb00ks/openb00ks/internal/db"
 	"github.com/openb00ks/openb00ks/internal/models"
-	"github.com/openb00ks/openb00ks/internal/suggest"
 	"github.com/openb00ks/openb00ks/internal/testutil"
 )
 
@@ -95,10 +94,18 @@ func TestRunSuggestAndDraftForImportCreatesBalancedDraft(t *testing.T) {
 		t.Fatalf("create ocr row: %v", err)
 	}
 
-	if err := runSuggest(ctx, receipts, nil, nil, drafts, nil, rules, nil, ocr, suggestions, nil, nil, receipt.ID, suggest.Pricing{}, nil, nil); err != nil {
+	w := &worker{
+		receipts:    receipts,
+		drafts:      drafts,
+		rules:       rules,
+		ocr:         ocr,
+		suggestions: suggestions,
+		accounts:    accounts,
+	}
+	if err := w.runSuggest(ctx, receipt.ID); err != nil {
 		t.Fatalf("run suggest: %v", err)
 	}
-	if err := runDraft(ctx, receipts, drafts, accounts, suggestions, nil, receipt.ID); err != nil {
+	if err := w.runDraft(ctx, receipt.ID); err != nil {
 		t.Fatalf("run draft: %v", err)
 	}
 

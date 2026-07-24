@@ -14,6 +14,8 @@ permissions:
 
 jobs:
   cla:
+    # Dependabot can't sign a CLA and can't read the signing token, so skip it entirely.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: CLA assistant
