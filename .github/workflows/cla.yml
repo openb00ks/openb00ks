@@ -14,6 +14,8 @@ permissions:
 
 jobs:
   cla:
+    # Dependabot can't sign a CLA and can't read the signing token, so skip it entirely.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: CLA assistant
@@ -28,7 +30,7 @@ jobs:
           path-to-signatures: 'signatures/version1/cla.json'
           path-to-document: 'https://github.com/openb00ks/openb00ks/blob/main/CLA.md'
           branch: 'cla-signatures'
-          allowlist: 'dependabot[bot],renovate[bot]'
+          allowlist: 'christophermancini,dependabot[bot],renovate[bot]'
           custom-notsigned-prcomment: >
             Thank you for your contribution to Open B00KS. Before we can merge it,
             please sign our Contributor License Agreement.

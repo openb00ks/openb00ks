@@ -34,7 +34,6 @@ func TestQueryLimit(t *testing.T) {
 		{"non-numeric uses default", "limit=abc", 50, 1000, 50},
 	}
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := queryLimit(newCtx(tc.query), tc.def, tc.max); got != tc.want {
