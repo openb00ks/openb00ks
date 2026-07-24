@@ -15,7 +15,7 @@ require (
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/prometheus/client_golang v1.24.1
 	github.com/spectrum-labs-tech/ai v0.1.0
-	github.com/spectrum-labs-tech/go-toolkit v0.1.3
+	github.com/spectrum-labs-tech/go-toolkit v0.1.4
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.40.0
