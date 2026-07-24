@@ -1,0 +1,17 @@
+{{- if and .Values.receiptStorage.persistence.enabled (not .Values.receiptStorage.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "open-b00ks.fullname" . }}-receipts
+  labels:
+    {{- include "open-b00ks.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.receiptStorage.persistence.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.receiptStorage.persistence.size }}
+  {{- with .Values.receiptStorage.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+{{- end }}

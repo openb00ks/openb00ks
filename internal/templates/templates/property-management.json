@@ -1,0 +1,32 @@
+{
+  "key": "property-management",
+  "name": "Property Management Company",
+  "accounts": [
+    { "name": "Cash", "type": "asset", "code": "1000" },
+    { "name": "Trust / Escrow Account", "type": "asset", "code": "1010" },
+    { "name": "Accounts Receivable", "type": "asset", "code": "1100" },
+    { "name": "Accounts Payable", "type": "liability", "code": "2000" },
+    { "name": "Security Deposits Held", "type": "liability", "code": "2100" },
+    { "name": "Mortgage & Loans Payable", "type": "liability", "code": "2200" },
+    { "name": "Owner's Equity", "type": "equity", "code": "3000" },
+    { "name": "Retained Earnings", "type": "equity", "code": "3100" },
+    { "name": "Rental Income", "type": "income", "code": "4000" },
+    { "name": "Management Fee Income", "type": "income", "code": "4010" },
+    { "name": "Late Fee Income", "type": "income", "code": "4020" },
+    { "name": "Application Fee Income", "type": "income", "code": "4030" },
+    { "name": "Repairs & Maintenance", "type": "expense", "code": "5000" },
+    { "name": "Property Taxes", "type": "expense", "code": "5010" },
+    { "name": "Property Insurance", "type": "expense", "code": "5020" },
+    { "name": "Utilities", "type": "expense", "code": "5030" },
+    { "name": "Landscaping & Grounds", "type": "expense", "code": "5040" },
+    { "name": "Cleaning & Janitorial", "type": "expense", "code": "5050" },
+    { "name": "Advertising & Leasing", "type": "expense", "code": "5060" },
+    { "name": "Property Management Software", "type": "expense", "code": "5070" },
+    { "name": "Legal & Professional Fees", "type": "expense", "code": "5080" },
+    { "name": "HOA Fees", "type": "expense", "code": "5090" },
+    { "name": "Mortgage Interest", "type": "expense", "code": "5100" },
+    { "name": "Salaries & Wages", "type": "expense", "code": "5110" },
+    { "name": "Office Supplies", "type": "expense", "code": "5120" },
+    { "name": "Bank & Merchant Fees", "type": "expense", "code": "5130" }
+  ]
+}

@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS receipt_jobs;
+DROP TABLE IF EXISTS vendor_rules;
+DROP TABLE IF EXISTS entries;
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS receipts;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS entity_users;
+DROP TABLE IF EXISTS entities;
+DROP TABLE IF EXISTS users;

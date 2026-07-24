@@ -1,0 +1,28 @@
+{
+  "key": "small-retailer",
+  "name": "Small Retailer / Maker",
+  "accounts": [
+    { "name": "Cash", "type": "asset", "code": "1000" },
+    { "name": "Cash Drawer", "type": "asset", "code": "1010" },
+    { "name": "Inventory", "type": "asset", "code": "1300" },
+    { "name": "Accounts Payable", "type": "liability", "code": "2000" },
+    { "name": "Sales Tax Payable", "type": "liability", "code": "2100" },
+    { "name": "Credit Card", "type": "liability", "code": "2010" },
+    { "name": "Owner's Equity", "type": "equity", "code": "3000" },
+    { "name": "Product Sales", "type": "income", "code": "4000" },
+    { "name": "Commission & Consignment Sales", "type": "income", "code": "4010" },
+    { "name": "Cost of Goods Sold", "type": "expense", "code": "5000" },
+    { "name": "Materials & Supplies", "type": "expense", "code": "5010" },
+    { "name": "Booth & Show Fees", "type": "expense", "code": "5020" },
+    { "name": "Payment Processing Fees", "type": "expense", "code": "5030" },
+    { "name": "Packaging & Shipping", "type": "expense", "code": "5040" },
+    { "name": "Advertising & Marketing", "type": "expense", "code": "5050" },
+    { "name": "Online Store & Marketplace Fees", "type": "expense", "code": "5060" },
+    { "name": "Travel & Mileage", "type": "expense", "code": "5070" },
+    { "name": "Meals", "type": "expense", "code": "5080" },
+    { "name": "Studio & Office Supplies", "type": "expense", "code": "5090" },
+    { "name": "Business Licenses & Permits", "type": "expense", "code": "5100" },
+    { "name": "Insurance", "type": "expense", "code": "5110" },
+    { "name": "Bank & Merchant Fees", "type": "expense", "code": "5120" }
+  ]
+}

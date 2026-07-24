@@ -1,0 +1,29 @@
+{
+  "key": "short-term-rental",
+  "name": "Short-Term Rental",
+  "accounts": [
+    { "name": "Cash", "type": "asset", "code": "1000" },
+    { "name": "Furnishings & Equipment", "type": "asset", "code": "1200" },
+    { "name": "Accounts Payable", "type": "liability", "code": "2000" },
+    { "name": "Credit Card", "type": "liability", "code": "2010" },
+    { "name": "Mortgage & Loans Payable", "type": "liability", "code": "2200" },
+    { "name": "Owner's Equity", "type": "equity", "code": "3000" },
+    { "name": "Rental Income", "type": "income", "code": "4000" },
+    { "name": "Cleaning Fee Income", "type": "income", "code": "4010" },
+    { "name": "Cleaning & Turnover", "type": "expense", "code": "5000" },
+    { "name": "Supplies & Consumables", "type": "expense", "code": "5010" },
+    { "name": "Repairs & Maintenance", "type": "expense", "code": "5020" },
+    { "name": "Utilities", "type": "expense", "code": "5030" },
+    { "name": "Internet & Cable", "type": "expense", "code": "5040" },
+    { "name": "Platform Service Fees", "type": "expense", "code": "5050" },
+    { "name": "Channel Manager & Software", "type": "expense", "code": "5060" },
+    { "name": "Furnishings & Decor", "type": "expense", "code": "5070" },
+    { "name": "Property Insurance", "type": "expense", "code": "5080" },
+    { "name": "Property Taxes", "type": "expense", "code": "5090" },
+    { "name": "Occupancy & Lodging Taxes", "type": "expense", "code": "5100" },
+    { "name": "Advertising & Marketing", "type": "expense", "code": "5110" },
+    { "name": "Mortgage Interest", "type": "expense", "code": "5120" },
+    { "name": "Landscaping & Pest Control", "type": "expense", "code": "5130" },
+    { "name": "Bank & Payment Fees", "type": "expense", "code": "5140" }
+  ]
+}

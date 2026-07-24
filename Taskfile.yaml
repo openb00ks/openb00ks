@@ -1,0 +1,144 @@
+version: "3"
+
+vars:
+  root_dir: "{{.TASKFILE_DIR}}"
+  api_port: "8181"
+  local_database_url: "postgres://openb00ks_user:openb00ks_dev@localhost:5436/openb00ks?sslmode=disable"
+
+dotenv:
+  - .env.test
+  - .env
+
+includes:
+  go:
+    taskfile: ./taskfiles/go.yaml
+    vars:
+      root_dir: "{{.TASKFILE_DIR}}"
+      api_port: "{{.api_port}}"
+  db:
+    taskfile: ./taskfiles/db.yaml
+    vars:
+      root_dir: "{{.TASKFILE_DIR}}"
+  migrate:
+    taskfile: ./taskfiles/migrate.yaml
+    vars:
+      root_dir: "{{.TASKFILE_DIR}}"
+  ui:
+    taskfile: ./taskfiles/ui.yaml
+    vars:
+      root_dir: "{{.TASKFILE_DIR}}"
+
+tasks:
+  default:
+    desc: Build Go binaries
+    cmds:
+      - task: go:build
+
+  fmt:
+    desc: Format Go and web
+    cmds:
+      - task: go:fmt
+      - task: ui:format
+      - npx dprint fmt
+
+  lint:
+    desc: Run linters
+    cmds:
+      - task: go:lint
+      - task: ui:lint
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - go mod download
+      - task: ui:install
+
+  dev:
+    desc: Run frontend dev server
+    deps: [ui:install]
+    cmds:
+      - task: ui:dev
+
+  dev/api:
+    desc: Run API server
+    cmds:
+      - task: go:run-api
+
+  dev/worker:
+    desc: Run background worker
+    cmds:
+      - task: go:run-worker
+
+  dev/db:
+    desc: Start local database
+    cmds:
+      - task: db:run
+
+  dev/compose/up:
+    desc: Start the local Docker Compose stack
+    cmds:
+      - docker compose -f compose.yaml up --build
+
+  dev/compose/down:
+    desc: Stop the local Docker Compose stack
+    cmds:
+      - docker compose -f compose.yaml down
+
+  dev/compose/logs:
+    desc: Tail local Docker Compose logs
+    cmds:
+      - docker compose -f compose.yaml logs -f
+
+  dev/reset-admin:
+    desc: Reset or create a local admin user
+    env:
+      DATABASE_URL: "{{.ADMIN_DATABASE_URL | default .local_database_url}}"
+    cmds:
+      - go run ./cmd/api admin reset-password --email "{{.EMAIL}}" --password "{{.PASSWORD}}" {{if .TENANT_NAME}}--tenant-name "{{.TENANT_NAME}}"{{end}}
+
+  search/reindex-transactions:
+    desc: Reindex transactions into the configured search provider
+    env:
+      DATABASE_URL: "{{.SEARCH_DATABASE_URL | default .local_database_url}}"
+    cmds:
+      - go run ./cmd/api search reindex-transactions {{if .TENANT_ID}}--tenant-id "{{.TENANT_ID}}"{{end}} {{if .ENTITY_ID}}--entity-id "{{.ENTITY_ID}}"{{end}}
+
+  search/reindex-documents:
+    desc: Reindex transactions, receipts, and imports into the unified search provider
+    env:
+      DATABASE_URL: "{{.SEARCH_DATABASE_URL | default .local_database_url}}"
+    cmds:
+      - go run ./cmd/api search reindex-documents {{if .TENANT_ID}}--tenant-id "{{.TENANT_ID}}"{{end}} {{if .ENTITY_ID}}--entity-id "{{.ENTITY_ID}}"{{end}}
+
+  chart/lint:
+    desc: Lint the generic Helm chart
+    cmds:
+      - '{{.HELM_BIN | default "helm"}} lint charts/open-b00ks'
+
+  chart/template:
+    desc: Render the generic Helm chart locally
+    cmds:
+      - '{{.HELM_BIN | default "helm"}} template open-b00ks charts/open-b00ks'
+
+  test:
+    desc: Run Go tests
+    cmds:
+      - task: go:test
+
+  test-int:
+    desc: Run integration tests (migrate then test)
+    cmds:
+      - task: migrate:up
+      - task: go:integration
+
+  build:
+    desc: Build API and web
+    cmds:
+      - task: go:build
+      - task: ui:build
+
+  clean:
+    desc: Clean build artifacts and deps
+    cmds:
+      - task: go:clean
+      - task: ui:clean

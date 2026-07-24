@@ -1,0 +1,181 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+api:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/openb00ks/openb00ks-api
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  env:
+    APP_ENV: production
+    API_ADDR: ":8080"
+    LOG_LEVEL: info
+    LOG_FORMAT: json
+    RECEIPT_STORAGE: local
+    RECEIPT_LOCAL_DIR: /data/receipts
+    RECEIPT_MAX_BYTES: "10485760"
+    # S3/R2 object storage: set RECEIPT_STORAGE=s3 and the non-secret S3 config here (the two access
+    # keys go in the app Secret as RECEIPT_S3_ACCESS_KEY_ID / RECEIPT_S3_SECRET_ACCESS_KEY). For
+    # Cloudflare R2, RECEIPT_S3_REGION is "auto" and the endpoint is the account's r2 URL.
+    #   RECEIPT_S3_BUCKET: openb00ks-receipts
+    #   RECEIPT_S3_ENDPOINT: https://<account>.r2.cloudflarestorage.com
+    #   RECEIPT_S3_REGION: auto
+    AI_PROVIDER: none
+    SEARCH_PROVIDER: none
+    TYPESENSE_COLLECTION_PREFIX: openb00ks
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+worker:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/openb00ks/openb00ks-worker
+    tag: ""
+    pullPolicy: IfNotPresent
+  env:
+    APP_ENV: production
+    LOG_LEVEL: info
+    LOG_FORMAT: json
+    RECEIPT_STORAGE: local
+    RECEIPT_LOCAL_DIR: /data/receipts
+    AI_PROVIDER: none
+    SEARCH_PROVIDER: none
+    TYPESENSE_COLLECTION_PREFIX: openb00ks
+    WORKER_ID: worker-1
+    QUEUE_BATCH: "5"
+    QUEUE_LOCK_SECONDS: "300"
+    QUEUE_MAX_ATTEMPTS: "5"
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+web:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/openb00ks/openb00ks-web
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  securityContext: {}
+
+opsScheduler:
+  # Recurring-task scheduler (cmd/ops-scheduler). Disabled by default; enable it to get automatic
+  # offsite DB backups. Each task self-gates on its config, so with no env below it starts idle.
+  enabled: false
+  image:
+    repository: ghcr.io/openb00ks/openb00ks-ops-scheduler
+    tag: ""
+    pullPolicy: IfNotPresent
+  env:
+    APP_ENV: production
+    LOG_LEVEL: info
+    LOG_FORMAT: json
+    # db-backup task (pg_dump -> gzip -> S3/R2). Set BACKUP_S3_BUCKET to enable it; the two access keys
+    # go in the app Secret as BACKUP_S3_ACCESS_KEY_ID / BACKUP_S3_SECRET_ACCESS_KEY. For Cloudflare R2,
+    # BACKUP_S3_REGION is "auto" and the endpoint is the account's r2 URL.
+    #   BACKUP_S3_BUCKET: openb00ks-backups
+    #   BACKUP_S3_ENDPOINT: https://<account>.r2.cloudflarestorage.com
+    #   BACKUP_S3_REGION: auto
+    #   BACKUP_S3_PREFIX: backups
+    #   BACKUP_RETENTION: "14"
+    #   BACKUP_INTERVAL_SECONDS: "86400"
+  resources: {}
+  podAnnotations: {}
+  podLabels: {}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+config:
+  corsAllowedOrigins: ""
+  publicRegistrationEnabled: "false"
+  refreshTTLSeconds: "2592000"
+  jwtTTLSeconds: "86400"
+  otelServiceName: ""
+  otelExporterOTLPEndpoint: ""
+  otelExporterOTLPProtocol: ""
+  otelExporterOTLPInsecure: ""
+  typesenseURL: ""
+
+existingSecret: ""
+
+secrets:
+  create: true
+  databaseURL: ""
+  jwtSecret: ""
+  openAIAPIKey: ""
+  typesenseAPIKey: ""
+
+receiptStorage:
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: open-b00ks.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: web
+  tls: []
+
+migrations:
+  enabled: true
+  hook: true
+  backoffLimit: 1
+  annotations: {}
+
+reindex:
+  enabled: false
+  tenantID: ""
+  entityID: ""
+  backoffLimit: 1
+  annotations: {}
+
+podSecurityContext:
+  fsGroup: 65532
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,45 @@
+{{- if .Values.migrations.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "open-b00ks.fullname" . }}-migrate
+  labels:
+    {{- include "open-b00ks.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+  {{- if or .Values.migrations.hook .Values.migrations.annotations }}
+  annotations:
+    {{- if .Values.migrations.hook }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- end }}
+    {{- with .Values.migrations.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  backoffLimit: {{ .Values.migrations.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "open-b00ks.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: {{ include "open-b00ks.apiImage" . | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          args:
+            - migrate
+            - up
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: DATABASE_URL
+{{- end }}

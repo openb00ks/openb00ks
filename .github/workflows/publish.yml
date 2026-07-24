@@ -1,0 +1,113 @@
+name: Publish
+
+# Publish the runtime artifacts to GHCR on a version tag (v*): the three container images
+# and the Helm chart as an OCI artifact. This repo ships GENERIC, reusable artifacts only —
+# deployment values, hostnames, and secrets live in a separate private deploy repo.
+#
+# Images:  ghcr.io/<owner>/openb00ks-{api,worker,web}
+# Chart:   oci://ghcr.io/<owner>/charts/open-b00ks
+# <owner> is the repo owner (github.repository_owner). The chart's default image repositories
+# (charts/open-b00ks/values.yaml) point at ghcr.io/openb00ks/openb00ks-*, matching where
+# these jobs publish; consumers can override image.repository in their own values.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  images:
+    name: Image (${{ matrix.component }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: api
+            context: .
+            dockerfile: Dockerfile
+            build_args: ""
+          - component: worker
+            context: .
+            dockerfile: Dockerfile.worker
+            build_args: ""
+          - component: ops-scheduler
+            context: .
+            dockerfile: Dockerfile.ops-scheduler
+            build_args: ""
+          - component: web
+            context: .
+            dockerfile: web/Dockerfile
+            # Same-origin: the SPA calls /api and the image's nginx proxies it to the API. This is
+            # the Dockerfile default too, but pin it here so the published image never drifts.
+            build_args: |
+              PUBLIC_API_BASE_URL=/api
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/openb00ks-${{ matrix.component }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.build_args }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  chart:
+    name: Helm chart (OCI)
+    runs-on: ubuntu-latest
+    needs: images
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      # On a v* tag, sync the chart version + appVersion to the release (so the pinned chart
+      # version and the image tags — which default to appVersion — line up). Otherwise
+      # (manual dispatch) keep the version committed in Chart.yaml.
+      - id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(awk '/^version:/{print $2; exit}' charts/open-b00ks/Chart.yaml)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Package and push chart
+        run: |
+          helm package charts/open-b00ks \
+            --version "${{ steps.ver.outputs.version }}" \
+            --app-version "${{ steps.ver.outputs.version }}" \
+            --destination dist
+          helm push dist/open-b00ks-*.tgz "oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts"

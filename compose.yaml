@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: openb00ks
+      POSTGRES_USER: openb00ks_user
+      POSTGRES_PASSWORD: openb00ks_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5436:5432"
+    volumes:
+      - openb00ks_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openb00ks_user -d openb00ks"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  typesense:
+    image: typesense/typesense:27.1
+    command:
+      - "--data-dir"
+      - "/data"
+      - "--api-key"
+      - "dev-typesense-key"
+      - "--enable-cors"
+    ports:
+      - "8108:8108"
+    volumes:
+      - openb00ks_typesense:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8108/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: dev
+      API_ADDR: ":8080"
+      DATABASE_URL: postgres://openb00ks_user:openb00ks_dev@postgres:5432/openb00ks?sslmode=disable
+      JWT_SECRET: change-me-in-compose-dev
+      CORS_ALLOWED_ORIGINS: http://localhost:5177
+      RECEIPT_STORAGE: local
+      RECEIPT_LOCAL_DIR: /data/receipts
+      AI_PROVIDER: none
+      SEARCH_PROVIDER: typesense
+      TYPESENSE_URL: http://typesense:8108
+      TYPESENSE_API_KEY: dev-typesense-key
+      TYPESENSE_COLLECTION_PREFIX: openb00ks
+    ports:
+      - "8181:8080"
+    volumes:
+      - openb00ks_receipts:/data/receipts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      typesense:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgres://openb00ks_user:openb00ks_dev@postgres:5432/openb00ks?sslmode=disable
+      RECEIPT_STORAGE: local
+      RECEIPT_LOCAL_DIR: /data/receipts
+      AI_PROVIDER: none
+      SEARCH_PROVIDER: typesense
+      TYPESENSE_URL: http://typesense:8108
+      TYPESENSE_API_KEY: dev-typesense-key
+      TYPESENSE_COLLECTION_PREFIX: openb00ks
+      WORKER_ID: compose-worker-1
+    volumes:
+      - openb00ks_receipts:/data/receipts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      typesense:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        PUBLIC_API_BASE_URL: http://localhost:8181
+    ports:
+      - "5177:80"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  openb00ks_pgdata:
+  openb00ks_typesense:
+  openb00ks_receipts:

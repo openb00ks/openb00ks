@@ -1,0 +1,20 @@
+version: "3"
+
+tasks:
+  up:
+    desc: Run all up migrations
+    cmds:
+      - |
+        if [ -z "$DATABASE_URL" ] && [ -z "$MIGRATE_DATABASE_URL" ]; then
+          echo "DATABASE_URL or MIGRATE_DATABASE_URL is required" && exit 1
+        fi
+        go run ./cmd/api migrate up
+
+  version:
+    desc: Show current migration version
+    cmds:
+      - |
+        if [ -z "$DATABASE_URL" ] && [ -z "$MIGRATE_DATABASE_URL" ]; then
+          echo "DATABASE_URL or MIGRATE_DATABASE_URL is required" && exit 1
+        fi
+        go run ./cmd/api migrate version

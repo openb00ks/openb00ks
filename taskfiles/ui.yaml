@@ -1,0 +1,62 @@
+version: "3"
+
+vars:
+  frontend_dir: "web"
+  frontend_port: "5177"
+
+tasks:
+  install:
+    desc: Install frontend dependencies
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm install
+
+  dev:
+    desc: Start the frontend development server
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run dev -- --port "{{.frontend_port}}" --strictPort
+
+  build:
+    desc: Build the frontend for production
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run build
+
+  preview:
+    desc: Preview the production build locally
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run preview
+
+  check:
+    desc: Run Svelte type checking
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run check
+
+  test:
+    desc: Run frontend tests
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm test -- --run
+
+  lint:
+    desc: Run frontend linting
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run lint
+
+  format:
+    desc: Format frontend code
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - npm run format
+
+  clean:
+    desc: Clean frontend build artifacts and dependencies
+    dir: "{{.frontend_dir}}"
+    cmds:
+      - rm -rf node_modules
+      - rm -rf .svelte-kit
+      - rm -rf build

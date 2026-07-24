@@ -1,0 +1,14 @@
+apiVersion: v2
+name: open-b00ks
+description: Generic Helm chart for Open B00KS runtime packaging.
+type: application
+version: 0.1.8
+appVersion: "0.1.8"
+keywords:
+  - bookkeeping
+  - tax
+  - self-hosted
+home: https://github.com/openb00ks/openb00ks
+icon: https://raw.githubusercontent.com/openb00ks/openb00ks/main/charts/open-b00ks/icon.svg
+sources:
+  - https://github.com/openb00ks/openb00ks

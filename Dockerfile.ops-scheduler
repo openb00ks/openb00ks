@@ -1,0 +1,34 @@
+# syntax=docker/dockerfile:1
+
+# Global build arg (declared before the first FROM so it's usable in the runtime FROM below). The
+# ops-scheduler needs pg_dump for the db-backup task, so its runtime stage is the official postgres
+# image — that guarantees the pg_dump major matches the server (pg_dump N dumps servers <= N). Bump
+# PG_MAJOR when the newest DB server does.
+ARG PG_MAJOR=18
+
+FROM golang:1.26-alpine AS build
+WORKDIR /src
+
+RUN apk add --no-cache ca-certificates
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . ./
+
+ARG TARGETOS
+ARG TARGETARCH
+ENV CGO_ENABLED=0
+RUN GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags="-s -w" -o /out/open-b00ks-ops-scheduler ./cmd/ops-scheduler
+
+# Runtime stage runs the Go scheduler, NOT postgres — the postgres entrypoint is bypassed; the image is
+# only for its bundled pg_dump. PG_MAJOR comes from the global ARG above.
+FROM postgres:${PG_MAJOR}-alpine
+
+COPY --from=build /out/open-b00ks-ops-scheduler /usr/local/bin/open-b00ks-ops-scheduler
+
+# 'postgres' (uid 70 on alpine) is a real non-root user with a writable home; good enough for /tmp
+# spooling during a dump. runAsNonRoot is enforced by the chart's securityContext too.
+USER postgres
+ENTRYPOINT ["/usr/local/bin/open-b00ks-ops-scheduler"]

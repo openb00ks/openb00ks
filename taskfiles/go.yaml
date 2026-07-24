@@ -1,0 +1,80 @@
+version: "3"
+
+vars:
+  go_packages: "./cmd/... ./internal/... ./db/..."
+
+tasks:
+  build:
+    desc: Build all Go binaries
+    cmds:
+      - CGO_ENABLED=0 go build -o '.out/' ./cmd/...
+
+  env:
+    desc: Print the Go environment
+    cmds:
+      - go env | sort
+
+  fmt:
+    desc: Run gofmt on source code
+    cmds:
+      - gofmt -w .
+
+  tidy:
+    desc: Tidy Go modules
+    cmds:
+      - go mod tidy
+
+  vet:
+    desc: Run Go vet
+    cmds:
+      - go vet {{.go_packages}}
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test -coverprofile=coverage.unit.out -covermode=atomic {{.go_packages}}
+
+  integration:
+    desc: Run integration tests (build tag - integration)
+    dotenv:
+      - .env.test
+      - .env
+    cmds:
+      - go test -tags=integration -coverprofile=coverage.int.out -covermode=atomic {{.go_packages}}
+
+  coverage:
+    desc: Generate test coverage report
+    cmds:
+      - go test -coverprofile=coverage.out {{.go_packages}}
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report generated at coverage.html"
+
+  run-api:
+    desc: Run the API server
+    dotenv:
+      - .env.test
+      - .env
+    env:
+      API_ADDR: ":{{.api_port}}"
+    cmds:
+      - go run ./cmd/api
+
+  run-worker:
+    desc: Run the background worker
+    dotenv:
+      - .env.test
+      - .env
+    cmds:
+      - go run ./cmd/worker
+
+  clean:
+    desc: Clean build artifacts and dependencies
+    cmds:
+      - go clean
+      - rm -rf '{{.root_dir}}/.out'
+      - rm -f coverage.out coverage.html

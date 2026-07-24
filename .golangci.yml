@@ -1,0 +1,32 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - durationcheck
+    - errcheck
+    - errorlint
+    - govet
+    - ineffassign
+    - misspell
+    - nilerr
+    - staticcheck
+    - unconvert
+    - unused
+    - wastedassign
+  settings:
+    errorlint:
+      comparison: true
+  disable:
+    - depguard
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

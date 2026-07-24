@@ -1,0 +1,6 @@
+# receipt-bench example cases — one JSON object per line (fields: internal/eval.Case).
+# Run against a real model:
+#   OPENAI_API_KEY=sk-... OPENAI_MODEL=<model> go run ./cmd/receipt-bench cmd/receipt-bench/example.jsonl
+# Gold fields (want_*) are optional per case; omit one to skip scoring that dimension.
+{"name":"blue-bottle-new-vendor","ocr_text":"SQ *BLUE BOTTLE COFFEE\n123 Main St\n2026-07-19\nLatte 5.00\nTax 0.40\nTotal 5.40","accounts":[{"Code":"6100","Name":"Meals & Entertainment","Type":"expense"},{"Code":"6200","Name":"Software Subscriptions","Type":"expense"}],"vendors":[],"credit_account":"2000","want_total_cents":540,"want_vendor_name":"Blue Bottle Coffee","want_account_code":"6100","want_ready":true}
+{"name":"aws-matched-vendor","ocr_text":"AMAZON WEB SERVICES\nInvoice 2026-07-01\nEC2 usage 100.00\nTax 0.00\nTotal 100.00","accounts":[{"Code":"6100","Name":"Meals & Entertainment","Type":"expense"},{"Code":"6200","Name":"Software Subscriptions","Type":"expense"}],"vendors":[{"ID":"v-aws","Name":"Amazon Web Services"}],"credit_account":"2000","want_total_cents":10000,"want_vendor_name":"Amazon Web Services","want_account_code":"6200","want_ready":true}

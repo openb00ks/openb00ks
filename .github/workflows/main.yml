@@ -1,0 +1,249 @@
+name: Main Checks
+
+# Checks + publish for main. On every push to main the correctness jobs run, and when they all pass
+# the runtime artifacts are (re)published under a single MOVING version — 0.0.0-main — so a consumer
+# can always pull the latest main. That tag is overwritten on every green main build; it is NOT a
+# release (releases are immutable v* tags via publish.yml).
+#
+# This repo is deployment-AGNOSTIC: it only publishes artifacts and knows nothing about who deploys
+# them. Downstream environments PULL this channel (e.g. a private deploy repo polls the published
+# digest) — this workflow never reaches into another repo.
+#
+# Images:  ghcr.io/<owner>/openb00ks-{api,worker,ops-scheduler,web}:0.0.0-main  (+ :main, :sha-<short>)
+# Chart:   oci://ghcr.io/<owner>/charts/open-b00ks  version/appVersion 0.0.0-main
+#
+# The chart's image tag defaults to .Chart.AppVersion, so pinning both to 0.0.0-main keeps the chart
+# and images aligned exactly like the release flow — no per-image overrides needed downstream.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {} # manual republish of the 0.0.0-main channel (still gated on green checks)
+
+# A newer green main supersedes an in-flight run (staging only ever wants the latest).
+concurrency:
+  group: main-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+env:
+  REGISTRY: ghcr.io
+  VERSION: 0.0.0-main
+
+jobs:
+  gofmt:
+    name: Go Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Check gofmt
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "gofmt needed on:"
+            echo "$files"
+            exit 1
+          fi
+
+  golangci:
+    name: Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.8.0
+          install-mode: goinstall
+
+  gotest:
+    name: Go Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Go test
+        run: go test ./...
+
+  go-integration:
+    name: Go Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ob_user
+          POSTGRES_PASSWORD: ob_pass
+          POSTGRES_DB: ob_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ob_user -d ob_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgres://ob_user:ob_pass@localhost:5432/ob_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Apply migrations
+        run: go run ./cmd/api migrate up
+      - name: Go integration tests
+        run: go test -tags=integration ./...
+
+  web-lint:
+    name: Web Lint
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_API_BASE_URL: http://localhost:8181
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install deps
+        run: npm ci
+        working-directory: web
+      - name: Lint
+        run: npm run lint
+        working-directory: web
+
+  web-test:
+    name: Web Tests
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_API_BASE_URL: http://localhost:8181
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install deps
+        run: npm ci
+        working-directory: web
+      - name: Test
+        run: npm run test
+        working-directory: web
+
+  web-build:
+    name: Web Build
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_API_BASE_URL: http://localhost:8181
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install deps
+        run: npm ci
+        working-directory: web
+      - name: Build
+        run: npm run build
+        working-directory: web
+
+  # Build + push the four runtime images to the moving 0.0.0-main channel, gated on every check above.
+  # packages:write is scoped to THIS job, so the check jobs (which run repo code + third-party tooling)
+  # never hold a push-capable token. Dockerfile validation on PRs lives in pr.yml.
+  publish:
+    name: Publish Image (${{ matrix.component }})
+    needs: [gofmt, golangci, gotest, go-integration, web-lint, web-test, web-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: api
+            context: .
+            dockerfile: Dockerfile
+            build_args: ""
+          - component: worker
+            context: .
+            dockerfile: Dockerfile.worker
+            build_args: ""
+          - component: ops-scheduler
+            context: .
+            dockerfile: Dockerfile.ops-scheduler
+            build_args: ""
+          - component: web
+            context: .
+            dockerfile: web/Dockerfile
+            build_args: |
+              PUBLIC_API_BASE_URL=/api
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/openb00ks-${{ matrix.component }}
+          tags: |
+            type=raw,value=0.0.0-main
+            type=raw,value=main
+            type=raw,value=sha-${{ github.sha }}
+
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.build_args }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  chart:
+    name: Helm chart (OCI)
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
+
+      - name: Package and push chart (moving 0.0.0-main)
+        run: |
+          helm package charts/open-b00ks \
+            --version "${VERSION}" \
+            --app-version "${VERSION}" \
+            --destination dist
+          helm push dist/open-b00ks-*.tgz "oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts"

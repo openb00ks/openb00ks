@@ -1,0 +1,56 @@
+{{- if .Values.reindex.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "open-b00ks.fullname" . }}-reindex-transactions
+  labels:
+    {{- include "open-b00ks.labels" . | nindent 4 }}
+    app.kubernetes.io/component: reindex
+  {{- with .Values.reindex.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  backoffLimit: {{ .Values.reindex.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "open-b00ks.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: reindex
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+      containers:
+        - name: reindex
+          image: {{ include "open-b00ks.apiImage" . | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          args:
+            - search
+            - reindex-transactions
+            {{- with .Values.reindex.tenantID }}
+            - --tenant-id
+            - {{ . | quote }}
+            {{- end }}
+            {{- with .Values.reindex.entityID }}
+            - --entity-id
+            - {{ . | quote }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "open-b00ks.fullname" . }}-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: DATABASE_URL
+            - name: TYPESENSE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: TYPESENSE_API_KEY
+                  optional: true
+{{- end }}

@@ -1,0 +1,12 @@
+{
+  "key": "basic",
+  "name": "Basic",
+  "accounts": [
+    { "name": "Cash", "type": "asset", "code": "1000" },
+    { "name": "Accounts Receivable", "type": "asset", "code": "1100" },
+    { "name": "Accounts Payable", "type": "liability", "code": "2000" },
+    { "name": "Owner's Equity", "type": "equity", "code": "3000" },
+    { "name": "Income", "type": "income", "code": "4000" },
+    { "name": "Expense", "type": "expense", "code": "5000" }
+  ]
+}

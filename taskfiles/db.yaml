@@ -1,0 +1,62 @@
+version: "3"
+
+vars:
+  db_image: "postgres:16"
+  db_name: "openb00ks"
+  db_user: "openb00ks_user"
+  db_password: "openb00ks_dev"
+  db_port: "5436"
+
+env:
+  PGHOST: localhost
+  PGPORT: "{{.db_port}}"
+  PGUSER: "{{.db_user}}"
+  PGPASSWORD: "{{.db_password}}"
+  PGDATABASE: "{{.db_name}}"
+  PGSSLMODE: disable
+  DATABASE_URL: "postgres://{{.db_user}}:{{.db_password}}@localhost:{{.db_port}}/{{.db_name}}?sslmode=disable"
+
+tasks:
+  logs:
+    desc: View the logs from the database container
+    cmds:
+      - docker logs -f -n 20 '{{.db_name}}_db'
+
+  stop:
+    desc: Stop the database container
+    cmds:
+      - docker stop '{{.db_name}}_db'
+
+  reset:
+    desc: Reset the database container
+    cmds:
+      - task: stop
+      - docker volume rm '{{.db_name}}_pgdata' || true
+
+  run:
+    desc: Start a database container
+    cmds:
+      - |
+        docker run --name '{{.db_name}}_db' -d -it --rm \
+          -p '{{.db_port}}:5432' \
+          -e PGDATA=/var/lib/postgresql/data/pgdata \
+          -e POSTGRES_DB='{{.db_name}}' \
+          -e POSTGRES_USER='{{.db_user}}' \
+          -e POSTGRES_PASSWORD='{{.db_password}}' \
+          -v '{{.db_name}}_pgdata:/var/lib/postgresql/data' \
+          '{{.db_image}}'
+
+  console:
+    desc: Open a database console
+    cmds:
+      - psql -h localhost -U '{{.db_user}}' '{{.db_name}}'
+
+  query:
+    desc: "Run a SQL query against the database - Usage: task db/query QUERY='SELECT * FROM components LIMIT 5;'"
+    cmds:
+      - psql -h localhost -U '{{.db_user}}' '{{.db_name}}' -c "{{.QUERY}}"
+
+  status:
+    desc: Check if database container is running
+    cmds:
+      - docker ps | grep '{{.db_name}}_db' || echo "Database container not running"

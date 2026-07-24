@@ -1,0 +1,24 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "incremental": true,
+  "markdown": {
+    "lineWidth": 120,
+    "textWrap": "maintain"
+  },
+  "prettier": {
+    "associations": ["**/*.{yaml,yml}"]
+  },
+  "includes": ["**/*.md", "**/*.yaml", "**/*.yml"],
+  "excludes": [
+    "**/node_modules",
+    "**/.git",
+    "**/dist",
+    "**/build",
+    "**/.wrangler",
+    "**/.svelte-kit"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/markdown-0.17.8.wasm",
+    "https://plugins.dprint.dev/prettier-0.46.1.json@e5bd083088a8dfc6e5ce2d3c9bee81489b065bd5345ef55b59f5d96627928b7a"
+  ]
+}

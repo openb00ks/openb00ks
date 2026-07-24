@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "open-b00ks.fullname" . }}-api
+  labels:
+    {{- include "open-b00ks.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "open-b00ks.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      {{- with .Values.api.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "open-b00ks.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+        {{- with .Values.api.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          image: {{ include "open-b00ks.apiImage" . | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          envFrom:
+            - configMapRef:
+                name: {{ include "open-b00ks.fullname" . }}-config
+          env:
+            {{- range $key, $value := .Values.api.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: JWT_SECRET
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: OPENAI_API_KEY
+                  optional: true
+            - name: TYPESENSE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: TYPESENSE_API_KEY
+                  optional: true
+            # S3/R2 receipt storage credentials (only when RECEIPT_STORAGE=s3). Optional so local
+            # storage deploys don't require them. Non-secret S3 config (bucket/endpoint/region) is
+            # set via api.env.
+            - name: RECEIPT_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: RECEIPT_S3_ACCESS_KEY_ID
+                  optional: true
+            - name: RECEIPT_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "open-b00ks.secretName" . }}
+                  key: RECEIPT_S3_SECRET_ACCESS_KEY
+                  optional: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          securityContext:
+            {{- toYaml .Values.api.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- if .Values.receiptStorage.persistence.enabled }}
+          volumeMounts:
+            - name: receipts
+              mountPath: /data/receipts
+          {{- end }}
+      {{- if .Values.receiptStorage.persistence.enabled }}
+      volumes:
+        - name: receipts
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-receipts" (include "open-b00ks.fullname" .)) .Values.receiptStorage.persistence.existingClaim }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

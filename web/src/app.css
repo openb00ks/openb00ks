@@ -1,0 +1,160 @@
+@import "tailwindcss";
+@config "../tailwind.config.cjs";
+
+:root {
+  color-scheme: light;
+  --primary: #0e627c;
+  --accent: #4da6c9;
+  --highlight: #d4a757;
+  --ink: #2e343a;
+  --muted: #66717c;
+  --paper: #f8fafc;
+  --surface: #ffffff;
+  --surface-soft: #eef3f7;
+  --surface-elevated: #ffffff;
+  --line: #e1e5e9;
+  --line-strong: #c8d0d8;
+  --success-bg: #edf8f0;
+  --success-fg: #116a3a;
+  --danger-bg: #fef2f2;
+  --danger-fg: #a11d2c;
+  --info-bg: #eef7fb;
+  --info-fg: #195a72;
+}
+
+.dark {
+  color-scheme: dark;
+  --primary: #4da6c9;
+  --accent: #8fd0e8;
+  --highlight: #d4a757;
+  --ink: #e2e8f0;
+  --muted: #94a3b8;
+  --paper: #0b1220;
+  --surface: #0f172a;
+  --surface-soft: #111c31;
+  --surface-elevated: #172235;
+  --line: rgba(148, 163, 184, 0.2);
+  --line-strong: rgba(148, 163, 184, 0.35);
+  --success-bg: rgba(16, 185, 129, 0.14);
+  --success-fg: #86efac;
+  --danger-bg: rgba(248, 113, 113, 0.16);
+  --danger-fg: #fca5a5;
+  --info-bg: rgba(77, 166, 201, 0.14);
+  --info-fg: #7dd3fc;
+}
+
+body {
+  @apply bg-paper text-ink antialiased;
+  font-family:
+    "Space Grotesk",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--highlight) 45%, transparent);
+}
+
+@layer components {
+  .status-message-sm {
+    @apply rounded-xl border px-3 py-2 text-sm;
+  }
+
+  .status-message-xs {
+    @apply rounded-xl border px-3 py-2 text-xs;
+  }
+
+  .status-message-md {
+    @apply rounded-xl border px-4 py-3 text-sm;
+  }
+
+  .status-pill {
+    @apply rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em];
+  }
+}
+
+input,
+textarea,
+select {
+  accent-color: var(--primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--surface) 35%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--primary) 45%, transparent);
+  border-radius: 0.75rem;
+}
+
+.status-error {
+  border-color: var(--line);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.status-success {
+  border-color: var(--line);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.status-warning {
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--highlight) 18%, var(--surface));
+  color: color-mix(in srgb, var(--highlight) 80%, var(--ink));
+}
+
+.status-info {
+  border-color: var(--line);
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+.field-error {
+  border-color: var(--danger-fg);
+  background: var(--danger-bg);
+}
+
+.text-success {
+  color: var(--success-fg);
+}
+
+.text-warning {
+  color: color-mix(in srgb, var(--highlight) 80%, var(--ink));
+}
+
+.text-error {
+  color: var(--danger-fg);
+}
+
+/* Print: strip app chrome and actions so a page (e.g. the Tax prep handoff) prints as a clean document. */
+@media print {
+  .app-shell {
+    display: block !important;
+  }
+  .app-main {
+    padding: 0 !important;
+  }
+  aside,
+  header,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

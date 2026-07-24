@@ -1,0 +1,30 @@
+{
+  "key": "software-startup",
+  "name": "Software Startup",
+  "accounts": [
+    { "name": "Cash", "type": "asset", "code": "1000" },
+    { "name": "Business Savings", "type": "asset", "code": "1010" },
+    { "name": "Accounts Receivable", "type": "asset", "code": "1100" },
+    { "name": "Accounts Payable", "type": "liability", "code": "2000" },
+    { "name": "Credit Card", "type": "liability", "code": "2010" },
+    { "name": "Deferred Revenue", "type": "liability", "code": "2200" },
+    { "name": "Members' Capital", "type": "equity", "code": "3000" },
+    { "name": "Retained Earnings", "type": "equity", "code": "3100" },
+    { "name": "Subscription Revenue", "type": "income", "code": "4000" },
+    { "name": "Services Revenue", "type": "income", "code": "4100" },
+    { "name": "Software & SaaS Subscriptions", "type": "expense", "code": "5000" },
+    { "name": "Cloud Hosting & Infrastructure", "type": "expense", "code": "5010" },
+    { "name": "Contractors & Freelancers", "type": "expense", "code": "5020" },
+    { "name": "Salaries & Wages", "type": "expense", "code": "5030" },
+    { "name": "Payroll Taxes & Benefits", "type": "expense", "code": "5040" },
+    { "name": "Advertising & Marketing", "type": "expense", "code": "5050" },
+    { "name": "Legal & Professional Fees", "type": "expense", "code": "5060" },
+    { "name": "Office Supplies & Equipment", "type": "expense", "code": "5070" },
+    { "name": "Travel", "type": "expense", "code": "5080" },
+    { "name": "Meals & Entertainment", "type": "expense", "code": "5090" },
+    { "name": "Domains & Web Services", "type": "expense", "code": "5100" },
+    { "name": "Dues & Subscriptions", "type": "expense", "code": "5110" },
+    { "name": "Insurance", "type": "expense", "code": "5120" },
+    { "name": "Bank & Merchant Fees", "type": "expense", "code": "5130" }
+  ]
+}

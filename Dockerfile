@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:1.26-alpine AS build
+WORKDIR /src
+
+RUN apk add --no-cache ca-certificates
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . ./
+
+ARG TARGETOS
+ARG TARGETARCH
+ENV CGO_ENABLED=0
+RUN GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags="-s -w" -o /out/open-b00ks ./cmd/api
+
+FROM scratch
+
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /out/open-b00ks /open-b00ks
+
+EXPOSE 8080
+USER 65532:65532
+ENTRYPOINT ["/open-b00ks"]
