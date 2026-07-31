@@ -14,7 +14,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/prometheus/client_golang v1.24.1
-	github.com/spectrum-labs-tech/ai v0.1.0
+	github.com/spectrum-labs-tech/ai v0.2.0
 	github.com/spectrum-labs-tech/go-toolkit v0.1.4
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.69.0
 	go.opentelemetry.io/otel v1.44.0
