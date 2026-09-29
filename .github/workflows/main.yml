@@ -240,10 +240,13 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login "${{ env.REGISTRY }}" -u "${{ github.actor }}" --password-stdin
 
-      - name: Package and push chart (moving 0.0.0-main)
+      # The chart version moves (0.0.0-main); its appVersion pins this commit's images (every
+      # component is tagged sha-<commit> above), so an install of 0.0.0-main is reproducible and a
+      # newer main build shows up as a new appVersion.
+      - name: Package and push chart (moving 0.0.0-main, pinned to this commit's images)
         run: |
           helm package charts/open-b00ks \
             --version "${VERSION}" \
-            --app-version "${VERSION}" \
+            --app-version "sha-${{ github.sha }}" \
             --destination dist
           helm push dist/open-b00ks-*.tgz "oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/charts"
