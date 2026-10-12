@@ -24,6 +24,9 @@ Legend:
 - `[~]` usable but still has important follow-up work
 - `[ ]` still remaining
 
+> **Proposed next direction:** an MCP server and an agent-operated, multi-entity ledger. See
+> `agent-native.md` for the reasoning and phases; it is not yet reflected in the lists below.
+
 ## Near term (tax-ready workflow)
 
 - [x] Core auth + session stability for local use: self-host setup, login/logout, refresh cookies, local admin recovery, MFA/recovery flows, request logging, and stale browser-auth cleanup

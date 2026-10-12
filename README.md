@@ -151,6 +151,7 @@ This repo uses Taskfile for common workflows.
 - `docs/structure.md`: repo layout
 - `docs/chart-templates.md`: Helm chart templating notes
 - `docs/roadmap.md`: roadmap
+- `docs/agent-native.md`: proposed direction: MCP server, agent-operated ledger, multi-entity year-end
 - `charts/open-b00ks`: generic Helm packaging, not environment deployment config
 
 ## Roadmap (non-goals in v0)
